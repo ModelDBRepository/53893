@@ -1,0 +1,110 @@
+// fig3.hoc creates fig3 p843 from Wang et al 1991
+
+load_file("nrngui.hoc")
+load_file("fig3.ses") // session of gui created windows for testing manually further
+ 
+// First create some vectors for the voltage clamps for fig3A and fig3B
+ 
+objref VC3A, VC3B
+save_dt = dt
+save_steps_per_ms = steps_per_ms
+
+// steps_per_ms = 10
+// dt = 0.1
+
+// note: obj = new Vector(size, filled_initial_value) and num_of_time_points = tstop/dt + 1
+ 
+VC3A = new Vector( 150/dt + 1, -42 )
+VC3B = new Vector( 600/dt + 1, -42 )
+ 
+// additionally add regions of -92 to VC3B
+// note: vsrcdest.fill(value, start, end) places "value" into vec between indicies
+VC3B.fill( -92, 0, 10/dt )                       // first 5ms is -92 mV
+VC3B.fill( -92, 210/dt + 1, 260/dt + 1 )        // a later 50ms duration is -92
+
+strdef tmpstr
+
+objref fig3graphs, fig3Atop, fig3Abottom
+objref fig3Btop, fig3Bmiddle, fig3Bbottom, fig3graph[5]
+
+// vectors to be graphed
+objref tmpxvec, tmpyvec
+objref m, d, h
+
+
+tmpxvec=new Vector()	// holds quantites to be graphed
+tmpyvec=new Vector()	// holds quantites to be graphed
+
+tmpxvec.record(&t)
+
+proc graphmaker() {
+// ($1 graphnumber, $2 tstop, $3 steps_per_ms, $4 dt, $5 startx, $6 stopx, $7 starty, $8 stopy)
+fig3graph[$1] = new Graph()
+fig3graph[$1].size($5, $6, $7, $8)
+
+{tstop =$2 steps_per_ms=$3 dt=$4 init() run()}
+
+}
+
+fig3graphs = new VBox()
+fig3graphs.intercept(1)
+
+// graphmaker arguments:
+// ($1 graphnumber, $2 tstop, $3 steps_per_ms, $4 dt, $5 startx, $6 stopx, $7 starty, $8 stopy)
+
+  tmpyvec.record(&soma.i_lva(0.5))
+ 
+  tstop = 150
+  xpanel("")
+  xlabel("Fig 3A  Wang et al 1991")
+  xpanel()
+  VC3A.play(&OClamp[0].vc, dt)
+  graphmaker(0,        150,        steps_per_ms,dt,      0,      150,         -0.025, 0)
+  tmpyvec.line(fig3graph[0], tmpxvec)
+  fig3graph[0].label(.85,.7,"I_T")
+
+  tstop = 600
+  objref VC3A
+  VC3B.play(&OClamp[0].vc, dt)
+
+// for this next graph record the m, d, and h states
+
+  m = new Vector(tstop/dt +1)
+  d = m.c
+  h = m.c
+  m.record(&soma.m_lva(0.5))
+  d.record(&soma.d_lva(0.5))
+  h.record(&soma.h_lva(0.5))
+  graphmaker(1,         150,          steps_per_ms,dt,      0,       150,         0, 1)
+  m.line(fig3graph[1], tmpxvec, 2, 0)
+  d.line(fig3graph[1], tmpxvec, 3, 0)
+  h.line(fig3graph[1], tmpxvec, 4, 0)
+  fig3graph[1].label(.5,.8,"m")
+  fig3graph[1].label(.3,.6,"d")
+  fig3graph[1].label(.6,.3,"h")
+
+  xpanel("")
+  xlabel("Fig 3B")
+  xpanel()
+
+// ($1 graphnumber, $2 tstop, $3 steps_per_ms, $4 dt, $5 startx, $6 stopx, $7 starty, $8 stopy)
+  graphmaker(2,        600 ,         steps_per_ms,dt,       0,       600,         -0.025, 0)
+  tmpyvec.line(fig3graph[2],tmpxvec)
+  fig3graph[2].label(.85,.7,"I_T")
+  
+  graphmaker(3,        600 ,         steps_per_ms,dt,       0,       600,             0, 1)
+  m.line(fig3graph[3], tmpxvec, 2, 0)
+  d.line(fig3graph[3], tmpxvec, 3, 0)
+  h.line(fig3graph[3], tmpxvec, 4, 0)
+  fig3graph[3].label(.2,.8,"m")
+  fig3graph[3].label(.7,.7,"d")
+  fig3graph[3].label(.8,.2,"h")
+
+  fig3graph[4] = new Graph()
+  fig3graph[4].size(0,       600,         -100, -30)
+
+  VC3B.line(fig3graph[4], tmpxvec)
+  fig3graph[4].label(.9,.5, "V")
+
+fig3graphs.intercept(0)
+fig3graphs.map("fig 3 Wang et al 1991", 550, 20, 350, 800)

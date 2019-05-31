@@ -1,0 +1,110 @@
+{load_file("nrngui.hoc")}
+objectvar save_window_, rvp_
+objectvar scene_vector_[5]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+{pwman_place(0,0,0)}
+
+//Begin SingleCompartment
+{
+load_file("single.hoc")
+}
+ocbox_ = new SingleCompartment(0)
+ocbox_.inserter = new Inserter(0)
+{object_push(ocbox_.inserter)}
+{
+mt.select("lva") i = mt.selected()
+ms[i] = new MechanismStandard("lva")
+ms[i].set("gbar_lva", 0.0004, 0)
+ms[i].set("Erev_lva", 120, 0)
+ms[i].set("V_s_lva", 0, 0)
+mstate[i]= 1
+maction(i)
+}
+{object_pop() doNotify()}
+{object_push(ocbox_)}
+{inserter.v1.map()}
+{endbox()}
+{object_pop() doNotify()}
+{
+ocbox_ = ocbox_.vbox
+ocbox_.map("SingleCompartment", 342, 688, 93.12, 111.36)
+}
+objref ocbox_
+//End SingleCompartment
+
+
+//Begin PointProcessGroupManager
+{
+load_file("pointgrp.hoc")
+}
+{
+ocbox_ = new PointProcessGroupManager(0)
+}
+{object_push(ocbox_)}
+{
+ms = new MechanismStandard("OClamp")
+ms.set("rs", 1, 0)
+ms.set("on", 0, 0)
+ms.set("off", 600, 0)
+ms.set("vc", -42, 0)
+ms.set("switched_on", 1, 0)
+mnews("OClamp", ms)
+select(0)
+execute("soma ocbox_.move(0.5)")
+}
+{object_pop() doNotify()}
+{
+ocbox_ = ocbox_.v1
+ocbox_.map("PointProcessGroupManager", 332, 348, 556.8, 295.68)
+}
+objref ocbox_
+//End PointProcessGroupManager
+
+{
+xpanel("RunControl", 0)
+v_init = -92
+xvalue("Init","v_init", 1,"stdinit()", 1, 1 )
+xbutton("Init & Run","run()")
+xbutton("Stop","stoprun=1")
+runStopAt = 5
+xvalue("Continue til","runStopAt", 1,"{continuerun(runStopAt) stoprun=1}", 1, 1 )
+runStopIn = 1
+xvalue("Continue for","runStopIn", 1,"{continuerun(t + runStopIn) stoprun=1}", 1, 1 )
+xbutton("Single Step","steprun()")
+t = 600
+xvalue("t","t", 2 )
+tstop = 600
+xvalue("Tstop","tstop", 1,"tstop_changed()", 0, 1 )
+dt = 0.025
+xvalue("dt","dt", 1,"setdt()", 0, 1 )
+steps_per_ms = 40
+xvalue("Points plotted/ms","steps_per_ms", 1,"setdt()", 0, 1 )
+screen_update_invl = 0.05
+xvalue("Scrn update invl","screen_update_invl", 1,"", 0, 1 )
+realtime = 1.42
+xvalue("Real Time","realtime", 0,"", 0, 1 )
+xpanel(35,347)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,600,0,1)
+scene_vector_[3] = save_window_
+{save_window_.view(0, 0, 600, 1, 927, 612, 296.64, 200.32)}
+graphList[1].append(save_window_)
+save_window_.save_name("graphList[1].")
+save_window_.addvar("soma.m_lva( 0.5 )", 2, 1, 0.333546, 0.775399, 2)
+save_window_.addvar("soma.d_lva( 0.5 )", 3, 1, 0.333546, 0.75623, 2)
+save_window_.addvar("soma.h_lva( 0.5 )", 4, 1, 0.336741, 0.708307, 2)
+}
+{
+save_window_ = new Graph(0)
+save_window_.size(-10,600,-0.025,-4.65661e-10)
+scene_vector_[4] = save_window_
+{save_window_.view(-10, -0.025, 610, 0.025, 926, 347, 300.48, 200.32)}
+graphList[1].append(save_window_)
+save_window_.save_name("graphList[1].")
+save_window_.addvar("soma.i_lva( 0.5 )", 1, 1, 0.547604, 0.521406, 2)
+}
+objectvar scene_vector_[1]
+{doNotify()}
